@@ -24,18 +24,22 @@ app.get("/", (request, response) => {
   response.send("<h2>Hello World!</h2>")
 })
 
-app.get("/info", (request, response) => {
+// show total number of entried in the db and current time
+app.get("/info", (request, response, next) => {
   let time = Date()
-  let count = persons.length
-  response.send(`<p>Phonebook has info for ${count} people</p> ${time}`)
+  Person.countDocuments({}).then((count) => {
+    response.send(`<p>Phonebook has info for ${count} people</p> ${time}`)
+  })
 })
 
+// load the whole phonebook
 app.get("/api/persons", (request, response) => {
   Person.find({}).then((persons) => {
     response.json(persons)
   })
 })
 
+// add a new person
 app.post("/api/persons", (request, response, next) => {
   const body = request.body
   if (!body.name || !body.number) {
@@ -56,6 +60,7 @@ app.post("/api/persons", (request, response, next) => {
     .catch((error) => next(error))
 })
 
+// update number for a person
 app.put("/api/persons/:id", (request, response, next) => {
   const body = request.body
 
@@ -71,6 +76,7 @@ app.put("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error))
 })
 
+// get individual person
 app.get("/api/persons/:id", (request, response, next) => {
   Person.findById(request.params.id)
     .then((person) => {
@@ -83,6 +89,7 @@ app.get("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error))
 })
 
+// delete a person
 app.delete("/api/persons/:id", (request, response, next) => {
   console.log(request.params)
   Person.findByIdAndRemove(request.params.id)
