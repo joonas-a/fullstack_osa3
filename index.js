@@ -7,8 +7,9 @@ const app = express()
 
 app.use(express.static("build"))
 app.use(express.json())
+app.use(cors())
 
-morgan.token("content", function (req, res) {
+morgan.token("content", function (req) {
   return JSON.stringify(req.body)
 })
 
@@ -18,14 +19,8 @@ app.use(
   )
 )
 
-app.use(cors())
-
-app.get("/", (request, response) => {
-  response.send("<h2>Hello World!</h2>")
-})
-
 // show total number of entried in the db and current time
-app.get("/info", (request, response, next) => {
+app.get("/info", (request, response) => {
   let time = Date()
   Person.countDocuments({}).then((count) => {
     response.send(`<p>Phonebook has info for ${count} people</p> ${time}`)
@@ -97,7 +92,7 @@ app.get("/api/persons/:id", (request, response, next) => {
 app.delete("/api/persons/:id", (request, response, next) => {
   console.log(request.params)
   Person.findByIdAndRemove(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end()
     })
     .catch((error) => next(error))
@@ -119,12 +114,11 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" })
-  } else if (error.name == "ValidationError") {
+  } else if (error.name === "ValidationError") {
     return response.status(400).send({ error: error.message })
   }
 
   next(error)
 }
 
-// tämä tulee kaikkien muiden middlewarejen rekisteröinnin jälkeen!
 app.use(errorHandler)
