@@ -41,10 +41,6 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({
       error: "person needs both a name and a number",
     })
-  } else if (persons.find((p) => p.name === body.name)) {
-    return response.status(400).json({
-      error: "name must be unique",
-    })
   }
   const person = new Person({
     name: body.name,
@@ -57,16 +53,25 @@ app.post("/api/persons", (request, response) => {
 })
 
 app.get("/api/persons/:id", (request, response) => {
-  Person.findById(request.params.id).then((person) => {
-    response.json(person).catch((error) => console.log(error.message))
-  })
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+      response.status(400).send({ error: "malformatted id" })
+    })
 })
 
 app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter((person) => person.id !== id)
-
-  response.status(204).end()
+  console.log(request.params)
+  Person.findByIdAndRemove(request.params.id).then((result) => {
+    response.status(204).end()
+  })
 })
 
 const PORT = process.env.PORT
